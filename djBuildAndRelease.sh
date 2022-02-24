@@ -15,5 +15,5 @@ $WD/build.sh
 
 
 for artifact in xalan serializer; do
-	mvn deploy:deploy-file -DrepositoryId=artifactory -Durl=$url -Dpackaging=jar -DgroupId=com.dowjones.xalan -DartifactId=$artifact -Dversion=2.7.2.1 -Dfile=$WD/build/$artifact.jar
+	mvn deploy:deploy-file -DrepositoryId=artifactory -Durl=$url -Dpackaging=jar -DgroupId=com.dowjones.xalan -DartifactId=$artifact -Dversion=2.7.2.2 -Dfile=$WD/build/$artifact.jar
 done
