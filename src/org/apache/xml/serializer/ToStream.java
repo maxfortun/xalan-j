@@ -175,6 +175,10 @@ abstract public class ToStream extends SerializerBase
      */
     private boolean m_expandDTDEntities = true;
   
+	/**
+	 * Track multibyte character in order to serialize when the whole byte sequence is available. 
+	 */
+	private Character m_highUTF16Surrogate = null;
 
     /**
      * Default constructor
@@ -1600,17 +1604,20 @@ abstract public class ToStream extends SerializerBase
                         // just leave it get added on to the clean characters
                         
                     }
-                    else if (Encodings.isHighUTF16Surrogate(ch) && i < end-1 && Encodings.isLowUTF16Surrogate(chars[i+1])) {
-                    	// So, this is a (valid) surrogate pair
-                    	if (! m_encodingInfo.isInEncoding(ch, chars[i+1])) {
-                    		int codepoint = Encodings.toCodePoint(ch, chars[i+1]);
-                    		writeOutCleanChars(chars, i, lastDirtyCharProcessed);
-                    		writer.write("&#");
-                    		writer.write(Integer.toString(codepoint));
-                    		writer.write(';');
-                    		lastDirtyCharProcessed = i+1;
-                    	}
-                    	i++; // skip the low surrogate, too
+                    else if (Encodings.isHighUTF16Surrogate(ch)) {
+						// Store for later processing. We may be at the end of a buffer, and must wait till low surrogate arrives before we can do anything with this.
+						m_highUTF16Surrogate = new Character(ch);
+						lastDirtyCharProcessed = i;
+					}
+                    else if (m_highUTF16Surrogate != null && Encodings.isLowUTF16Surrogate(ch)) {
+						// The complete utf16 byte sequence is now available and may be serialized.
+                    	int codepoint = Encodings.toCodePoint(ch, m_highUTF16Surrogate.charValue());
+                    	writeOutCleanChars(chars, i, lastDirtyCharProcessed);
+                    	writer.write("&#");
+                    	writer.write(Integer.toString(codepoint));
+                    	writer.write(';');
+                    	lastDirtyCharProcessed = i;
+						m_highUTF16Surrogate = null;
                     }
                 	else {
                         // This is a fallback plan, we get here if the
@@ -1618,6 +1625,12 @@ abstract public class ToStream extends SerializerBase
                     	// of a surrogate pair
                         // The right thing is to write out an entity
                         writeOutCleanChars(chars, i, lastDirtyCharProcessed);
+                    	if(m_highUTF16Surrogate != null) {
+                        	writer.write("&#");
+                        	writer.write(Integer.toString(m_highUTF16Surrogate.charValue()));
+                        	writer.write(';');
+							m_highUTF16Surrogate = null;
+						}
                         writer.write("&#");
                         writer.write(Integer.toString(ch));
                         writer.write(';');
