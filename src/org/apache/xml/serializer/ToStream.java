@@ -1607,11 +1607,9 @@ abstract public class ToStream extends SerializerBase
                     else if (Encodings.isHighUTF16Surrogate(ch)) {
 						// Store for later processing. We may be at the end of a buffer, and must wait till low surrogate arrives before we can do anything with this.
 						m_highUTF16Surrogate = new Character(ch);
-						System.err.println("m_highUTF16Surrogate(isHigh): "+ch+"/"+(int)ch+" -> "+m_highUTF16Surrogate.charValue()+"/"+(int)m_highUTF16Surrogate.charValue());
 						lastDirtyCharProcessed = i;
 					}
                     else if (m_highUTF16Surrogate != null && Encodings.isLowUTF16Surrogate(ch)) {
-						System.err.println("m_highUTF16Surrogate(isLow): "+ch+"/"+(int)ch+" -> "+m_highUTF16Surrogate.charValue()+"/"+(int)m_highUTF16Surrogate.charValue());
 						// The complete utf16 byte sequence is now available and may be serialized.
                     	int codepoint = Encodings.toCodePoint(m_highUTF16Surrogate.charValue(), ch);
                     	writeOutCleanChars(chars, i, lastDirtyCharProcessed);
@@ -1628,7 +1626,6 @@ abstract public class ToStream extends SerializerBase
                         // The right thing is to write out an entity
                         writeOutCleanChars(chars, i, lastDirtyCharProcessed);
                     	if(m_highUTF16Surrogate != null) {
-							System.err.println("m_highUTF16Surrogate(noLow): "+ch+"/"+(int)ch+" -> "+m_highUTF16Surrogate.charValue()+"/"+(int)m_highUTF16Surrogate.charValue());
                         	writer.write("&#");
                         	writer.write(Integer.toString(m_highUTF16Surrogate.charValue()));
                         	writer.write(';');
