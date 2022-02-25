@@ -1606,6 +1606,7 @@ abstract public class ToStream extends SerializerBase
                     }
                     else if (Encodings.isHighUTF16Surrogate(ch)) {
 						// Store for later processing. We may be at the end of a buffer, and must wait till low surrogate arrives before we can do anything with this.
+                    	writeOutCleanChars(chars, i, lastDirtyCharProcessed);
 						m_highUTF16Surrogate = new Character(ch);
 						lastDirtyCharProcessed = i;
 					}
